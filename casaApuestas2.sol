@@ -6,7 +6,7 @@ contract casaApuestas{
     uint public totalCarreras;
     mapping(uint => Carrera) public carreras; //carreras existentes
     mapping(uint => Caballo) public caballos; //caballos existentes
-    mapping(uint => uint[]) public competencias; 
+    mapping(uint => Caballo[]) public competencias; 
 
     struct Carrera{
         uint codigo;
@@ -80,7 +80,7 @@ contract casaApuestas{
         uint cantCaballos = competencias[_codCarrera].length;
         bool caballoRep = false;
         for(uint i = 0; i < cantCaballos; i++){
-            if(competencias[_codCarrera][i] == _codCaballo){
+            if(competencias[_codCarrera][i].codigo == _codCaballo){
                 caballoRep = true;
                 break;
             }
@@ -93,7 +93,7 @@ contract casaApuestas{
         uint cantCaballos = competencias[_codCarrera].length;
         bool cabEncontrado = false;
         for(uint i = 0; i < cantCaballos; i++){
-            if(competencias[_codCarrera][i] == _codCaballo){
+            if(competencias[_codCarrera][i].codigo == _codCaballo){
                 cabEncontrado = true;
                 break;
             }
@@ -130,7 +130,7 @@ contract casaApuestas{
     caballoExiste(_codCaballo)
     carreraExiste(_codCarrera)
     caballoRepCarrera(_codCarrera, _codCaballo){
-        competencias[_codCarrera].push(_codCaballo);
+        competencias[_codCarrera].push(caballos[_codCaballo]);
     }
 
     function registrarCarrera(uint _codCarrera) public 
@@ -161,10 +161,6 @@ contract casaApuestas{
     }
 
     function getApuestas(uint _codCarrera) public view returns(uint, uint) {
-        return (carreras[_codCarrera].apuestas[msg.sender].monto, carreras[_codCarrera].apuestas[msg.sender].codCaballo);
-    }
-
-    function getCaballosEnCarrera(uint _codCarrera) public view returns(uint, uint) {
         return (carreras[_codCarrera].apuestas[msg.sender].monto, carreras[_codCarrera].apuestas[msg.sender].codCaballo);
     }
 }

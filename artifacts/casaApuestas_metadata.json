@@ -15,7 +15,7 @@
 				"name": "anfitrion",
 				"outputs": [
 					{
-						"internalType": "address payable",
+						"internalType": "address",
 						"name": "",
 						"type": "address"
 					}
@@ -89,6 +89,11 @@
 						"internalType": "enum casaApuestas.Estado",
 						"name": "estadoCarrera",
 						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "montoTotal",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -134,6 +139,54 @@
 				"name": "crearCarrera",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_codCarrera",
+						"type": "uint256"
+					}
+				],
+				"name": "getApuestas",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_codCarrera",
+						"type": "uint256"
+					}
+				],
+				"name": "getCaballosEnCarrera",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -223,10 +276,10 @@
 	},
 	"sources": {
 		"casaApuestas.sol": {
-			"keccak256": "0x056a83f58f6de389b859066e7a091463503e0701f258535a5b3ed11f477994b7",
+			"keccak256": "0x8037b5f6035ae11d80e300863abf245ff1e54fd7ec365c601a431653c6fb02a8",
 			"urls": [
-				"bzz-raw://61cdc6a06d8301b88462a0d4364e42de0b96f3b34a041951fc5c99935db2ceb6",
-				"dweb:/ipfs/QmYfpdTXWY2F8EUDy91HU4cztCZtxrEbJ8fw89H9LZ3v6q"
+				"bzz-raw://8287db01f67aa22ca9feb4a5fe92ceb165b0b423c5d80e2ab973a21cba195ef3",
+				"dweb:/ipfs/QmYAoRBmDXbMZNRu5gcuscLUKrEwe8J5CdLAMoghnhxrXk"
 			]
 		}
 	},
