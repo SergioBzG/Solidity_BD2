@@ -4,15 +4,18 @@ contract casaApuestas{
     address public anfitrion;
     enum Estado {Creada, Registrada, Terminada}
     uint public totalCarreras;
+    event Printazo(uint apostado, uint apostadoGanadores, uint caballoWin);
     mapping(uint => Carrera) public carreras; //carreras existentes
     mapping(uint => Caballo) public caballos; //caballos existentes
     mapping(uint => uint[]) public competencias; //caballos registrados en una carrera determinada
+    mapping(uint => address[]) public apostadores; //apostadores registrados en una carrera determinada
 
     struct Carrera{
         uint codigo;
         string nombre;
         Estado estadoCarrera;
         uint montoTotal; //monto total de las apuestas realizadas en la carrera
+        uint numeroCaballos;
         mapping(address => Apuesta) apuestas; //usuarios con sus respectivas apuestas realizadas en la carrera
     }
 
@@ -25,6 +28,7 @@ contract casaApuestas{
         uint monto;
         uint codCaballo;
         bool creada;
+        uint proporcion;
     }
 
     constructor() public {
@@ -114,7 +118,8 @@ contract casaApuestas{
         // c.estadoCarrera = Estado.Creada;
         // c.apuestas = apuestas;
         // carreras[_codigo] = c;
-        carreras[_codigo] = Carrera(_codigo, _nombre, Estado.Creada, 0);
+        //= new Caballo[](6);
+        carreras[_codigo] = Carrera(_codigo, _nombre, Estado.Creada, 0, 0);
         totalCarreras += 1;
     }
 
@@ -132,6 +137,7 @@ contract casaApuestas{
     carreraExiste(_codCarrera)
     caballoRepCarrera(_codCarrera, _codCaballo){
         competencias[_codCarrera].push(_codCaballo);
+        carreras[_codCarrera].numeroCaballos += 1;
     }
 
     function registrarCarrera(uint _codCarrera) public 
@@ -156,14 +162,60 @@ contract casaApuestas{
             carreras[_codCarrera].montoTotal += montoApuesta;
         } else{
             //Si el usuario no tiene apuestas previas se le crea una por primera vez
-            carreras[_codCarrera].apuestas[apostador] = Apuesta(montoApuesta, _codCaballo, true);
+            carreras[_codCarrera].apuestas[apostador] = Apuesta(montoApuesta, _codCaballo, true, 0);
             carreras[_codCarrera].montoTotal += montoApuesta;
+            apostadores[_codCarrera].push(apostador); // Apostadores por cada carrera
         }
     }
 
-    function getApuestas(uint _codCarrera) public view returns(uint, uint) {
-        return (carreras[_codCarrera].apuestas[msg.sender].monto, carreras[_codCarrera].apuestas[msg.sender].codCaballo);
+    function generarAleatorio(uint modulo) internal returns(uint){
+        uint randNonce = 0;
+        randNonce ++; 
+        uint numero = uint(keccak256(abi.encodePacked(now, msg.sender, randNonce))) % modulo;
+        return (numero);
     }
+
+    function terminarCarrera(uint _codCarrera) payable public
+    isAnfitrion
+    carreraExiste(_codCarrera)
+    estadoAct(_codCarrera, Estado.Registrada){
+        uint caballosEnCarrera = carreras[_codCarrera].numeroCaballos;  // Se obtiene el número de caballos que tiene dicha carrera
+        uint indiceCaballoGanador = generarAleatorio(caballosEnCarrera);  // Se obtiene le indice del caballo ganador (0,N-1)
+        uint codigoCaballoGanador = competencias[_codCarrera][indiceCaballoGanador]; // Se obtiene el código del caballo que ganó (ej. Horse:88)
+
+        uint totalApostadoCarrera = carreras[_codCarrera].montoTotal; 
+        
+
+        uint apostadoPorGanadores = 0; // El monto que apostaron unicamente los que ganaron (caballo ganador)
+
+        // For para calcular el total apostado por los ganadores
+        for (uint i = 0; i < apostadores[_codCarrera].length; i++) {  // Total de apostadores para esta carrera
+            address direccion = apostadores[_codCarrera][i]; // Dirección de los apostadores vinculados a una carrera y se obtiene la direccion con el indice
+
+            if (carreras[_codCarrera].apuestas[direccion].codCaballo == codigoCaballoGanador){
+                apostadoPorGanadores += carreras[_codCarrera].apuestas[direccion].monto;
+            }
+        }  
+
+        // For para calcular la comisión de cada ganador
+        for (uint i = 0; i < apostadores[_codCarrera].length; i++) {
+            address direccion = apostadores[_codCarrera][i];
+            if (carreras[_codCarrera].apuestas[direccion].codCaballo == codigoCaballoGanador){
+                carreras[_codCarrera].apuestas[direccion].proporcion = (carreras[_codCarrera].apuestas[direccion].monto / apostadoPorGanadores); // Se le asigna la proporcion al apostador
+                payable(direccion).transfer((carreras[_codCarrera].apuestas[direccion].monto / apostadoPorGanadores) * (totalApostadoCarrera - (totalApostadoCarrera / 4)));
+            }
+            
+            emit Printazo(carreras[_codCarrera].apuestas[direccion].monto, apostadoPorGanadores, codigoCaballoGanador);
+        } 
+
+        msg.sender.transfer(totalApostadoCarrera / 4);
+
+
+    }
+
+    //function getApuestas(uint _codCarrera) public view returns(uint, uint) {
+    //    return (carreras[_codCarrera].apuestas[msg.sender].monto, carreras[_codCarrera].apuestas[msg.sender].codCaballo);
+    //}
 
     // function getCaballosEnCarrera(uint _codCarrera) public view returns(uint []) {
     //     //Retornar el array con los códigos de los caballos que pertenecen a la carrera 
