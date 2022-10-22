@@ -1,10 +1,11 @@
 pragma solidity ^0.6.0;
+
 contract casaApuestas{
-    address public anfitrion;
+    address payable public anfitrion;
     enum Estado {Creada, Registrada, Terminada}
+    uint public totalCarreras;
     mapping(uint => Carrera) public carreras; //carreras existentes
     mapping(uint => Caballo) public caballos; //caballos existentes
-    uint public totalCarreras;
     mapping(uint => uint[]) public competencias; 
 
     struct Carrera{
@@ -22,6 +23,7 @@ contract casaApuestas{
     struct Apuesta{
         uint monto;
         uint codCaballo;
+        bool creada;
     }
 
     constructor() public{
@@ -34,7 +36,7 @@ contract casaApuestas{
     }
 
     modifier isNotAnfitrion(){
-        require(msg.sender != anfitrion, "El invocador debe ser el anfitrion");
+        require(msg.sender != anfitrion, "El invocador debe ser un usuario diferente al anfitrion");
         _;
     }
 
@@ -62,30 +64,64 @@ contract casaApuestas{
         require(bytes(caballos[_codCarrera].nombre).length != 0, "La carrera ingresada no existe");
         _;
     }
-    
-    function crearCarrera(uint _codigo, string memory _nombre) public isAnfitrion{
-        carreras[_codigo] = Carrera({codigo: _codigo, nombre: _nombre, estadoCarrera: Estado.Creada});
+
+    modifier caballoRepetido(uint _codCaballo){
+        require(bytes(caballos[_codCaballo].nombre).length == 0, "Ya existe un caballo con este código");
+        _;
+    }
+
+    modifier carreraRepetida(uint _codCarrera){
+        require(bytes(carreras[_codCarrera].nombre).length == 0, "Ya existe una carrera con este código");
+        _;
+    }
+
+    modifier caballoRepCarrera(uint _codCarrera, uint _codCaballo){
+        uint cantCaballos = competencias[_codCarrera].length;
+        bool caballoRep = false;
+        for(uint i = 0; i < cantCaballos; i++){
+            if(competencias[_codCarrera][i] == _codCaballo){
+                caballoRep = true;
+                break;
+            }
+        }
+        require(!caballoRep, "Este caballo ya se encuentra registrado en esta carrera");
+        _;
+    }
+
+    modifier caballoEnCarrera(uint _codCarrera, uint _codCaballo){
+        uint cantCaballos = competencias[_codCarrera].length;
+        bool cabEncontrado = false;
+        for(uint i = 0; i < cantCaballos; i++){
+            if(competencias[_codCarrera][i] == _codCaballo){
+                cabEncontrado = true;
+                break;
+            }
+        }
+        require(cabEncontrado, "Este caballo no se encuentra registrado en esta carrera");
+        _;
+    }
+
+    function crearCarrera(uint _codigo, string memory _nombre) public 
+    isAnfitrion
+    carreraRepetida(_codigo){
+        carreras[_codigo] = Carrera(_codigo, _nombre, Estado.Creada);
         totalCarreras += 1;
     }
 
-    function registrarCaballo(uint _codigo, string memory _nombre) public isAnfitrion{
+    function registrarCaballo(uint _codigo, string memory _nombre) public 
+    isAnfitrion
+    caballoRepetido(_codigo){
         caballos[_codigo] = Caballo(_codigo, _nombre);
     }
 
-    function registrarEnCompetencia(uint _codCaballo, uint _codCarrera) public 
+    function registrarEnCarrera(uint _codCaballo, uint _codCarrera) public 
     isAnfitrion
     estadoAct(_codCarrera, Estado.Creada)
     tamanoMax(_codCarrera)
     caballoExiste(_codCaballo)
-    carreraExiste(_codCarrera){
-        // uint cantCaballos = competencias[_codCarrera].length;
-        // for(uint i = 0; i < cantCaballos; i++){
-        //     if(competencias[_codCarrera][i] == _codCaballo){
-        //         return "Este caballo ya se encuentra registrado en esta carrera";
-        //     }
-        // }
+    carreraExiste(_codCarrera)
+    caballoRepCarrera(_codCarrera, _codCaballo){
         competencias[_codCarrera].push(_codCaballo);
-        // return "Caballo registrado en la carrera";
     }
 
     function registrarCarrera(uint _codCarrera) public 
@@ -96,5 +132,23 @@ contract casaApuestas{
         carreras[_codCarrera].estadoCarrera = Estado.Registrada;
     }
 
-
+    function apostar(uint _codCaballo, uint _codCarrera) payable public 
+    isNotAnfitrion
+    estadoAct(_codCarrera, Estado.Registrada)
+    caballoEnCarrera(_codCarrera, _codCaballo){
+        uint montoApuesta = msg.value;
+        address apostador = msg.sender;
+        //Se comprueba si el ususario tiene apuestas 
+        if(carreras[_codCarrera].apuestas[apostador].creada){
+            //Se verifica que el usuario no apueste por otro caballo
+            require(carreras[_codCarrera].apuestas[apostador].codCaballo == _codCaballo, "Solo se puede apostar por un caballo dentro de esta carrera");
+            carreras[_codCarrera].apuestas[apostador].monto += montoApuesta;
+        } else{
+            //Si el usuario no tiene apuestas previas se le crea una por primera vez
+            carreras[_codCarrera].apuestas[apostador] = Apuesta(montoApuesta, _codCaballo, true);
+        }
+    }
 }
+
+
+//!!!!!!!!!!NO ESTÁ GUARDANDO EL MAPPING DE APUESTAS

@@ -15,12 +15,30 @@
 				"name": "anfitrion",
 				"outputs": [
 					{
-						"internalType": "address",
+						"internalType": "address payable",
 						"name": "",
 						"type": "address"
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_codCaballo",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_codCarrera",
+						"type": "uint256"
+					}
+				],
+				"name": "apostar",
+				"outputs": [],
+				"stateMutability": "payable",
 				"type": "function"
 			},
 			{
@@ -162,7 +180,7 @@
 						"type": "uint256"
 					}
 				],
-				"name": "registrarEnCompetencia",
+				"name": "registrarEnCarrera",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -205,10 +223,10 @@
 	},
 	"sources": {
 		"casaApuestas.sol": {
-			"keccak256": "0xdaae7cfb452ec877bcdbe15e9d2b3e411b4c76a1d86571755c51f73e8b87e059",
+			"keccak256": "0x056a83f58f6de389b859066e7a091463503e0701f258535a5b3ed11f477994b7",
 			"urls": [
-				"bzz-raw://e68985249c03f5d26b92853cbb634c387346c087218b752b410ef6a72a6e33c6",
-				"dweb:/ipfs/QmTkUk365gid8Fn1Hp3VmYJAtzuAYP71zmoKV8Dih5uGJy"
+				"bzz-raw://61cdc6a06d8301b88462a0d4364e42de0b96f3b34a041951fc5c99935db2ceb6",
+				"dweb:/ipfs/QmYfpdTXWY2F8EUDy91HU4cztCZtxrEbJ8fw89H9LZ3v6q"
 			]
 		}
 	},
