@@ -169,30 +169,6 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "_codCarrera",
-						"type": "uint256"
-					}
-				],
-				"name": "getCaballosEnCarrera",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
 						"name": "_codigo",
 						"type": "uint256"
 					},
@@ -276,10 +252,10 @@
 	},
 	"sources": {
 		"casaApuestas.sol": {
-			"keccak256": "0x8037b5f6035ae11d80e300863abf245ff1e54fd7ec365c601a431653c6fb02a8",
+			"keccak256": "0x05cec818d263040ab5fb7696ebb950dca834858af264f5b89678a1cdfdccb32a",
 			"urls": [
-				"bzz-raw://8287db01f67aa22ca9feb4a5fe92ceb165b0b423c5d80e2ab973a21cba195ef3",
-				"dweb:/ipfs/QmYAoRBmDXbMZNRu5gcuscLUKrEwe8J5CdLAMoghnhxrXk"
+				"bzz-raw://c3cd43522cf85f8f13c106ca237cee9bd97f2505e99b5835bac7ffa8b5d07ab1",
+				"dweb:/ipfs/QmeA4ixUtvzTkzfaQaxK7CJhw6N6aQ7SGZ65HuAFo6a39h"
 			]
 		}
 	},

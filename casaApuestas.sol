@@ -6,14 +6,14 @@ contract casaApuestas{
     uint public totalCarreras;
     mapping(uint => Carrera) public carreras; //carreras existentes
     mapping(uint => Caballo) public caballos; //caballos existentes
-    mapping(uint => uint[]) public competencias; 
+    mapping(uint => uint[]) public competencias; //caballos registrados en una carrera determinada
 
     struct Carrera{
         uint codigo;
         string nombre;
         Estado estadoCarrera;
-        uint montoTotal;
-        mapping(address => Apuesta) apuestas;
+        uint montoTotal; //monto total de las apuestas realizadas en la carrera
+        mapping(address => Apuesta) apuestas; //usuarios con sus respectivas apuestas realizadas en la carrera
     }
 
     struct Caballo{
@@ -31,26 +31,27 @@ contract casaApuestas{
         anfitrion = msg.sender;
     }
 
+    //se verifica que el invocador sea el anfitrion
     modifier isAnfitrion(){
         require(msg.sender == anfitrion, "El invocador debe ser el anfitrion");
         _;
     }
-
+    //se verifica que el invocador no sea el anfitrion
     modifier isNotAnfitrion(){
         require(msg.sender != anfitrion, "El invocador debe ser un usuario diferente al anfitrion");
         _;
     }
-
+    //se verifica que la carrera se encuentre en un estado determinado 
     modifier estadoAct(uint _codCarrera, Estado _estado){
         require(carreras[_codCarrera].estadoCarrera == _estado, "La carrera no cumple con el estado requerido");
         _;
     }
-    
+    //se verifica que la carrera posea 5 o menos caballos
     modifier tamanoMax(uint _codCarrera){
         require(competencias[_codCarrera].length < 5, "La carrera ya cuenta con 5 caballos");
         _;
     }
-
+    //se verifica que la carrera tenga mínimo 2 caballos registrados
     modifier tamanoMin(uint _codCarrera){
         require(competencias[_codCarrera].length >= 2, "La carrera debe contar con al menos 2 caballos");
         _;
@@ -75,7 +76,7 @@ contract casaApuestas{
         require(bytes(carreras[_codCarrera].nombre).length == 0, "Ya existe una carrera con este código");
         _;
     }
-
+    //se verifica que no se vuelva a registrar un caballo en una carrera determinada
     modifier caballoRepCarrera(uint _codCarrera, uint _codCaballo){
         uint cantCaballos = competencias[_codCarrera].length;
         bool caballoRep = false;
@@ -88,7 +89,7 @@ contract casaApuestas{
         require(!caballoRep, "Este caballo ya se encuentra registrado en esta carrera");
         _;
     }
-
+    //se verifica que un caballo esté registrado en una carrera determinada
     modifier caballoEnCarrera(uint _codCarrera, uint _codCaballo){
         uint cantCaballos = competencias[_codCarrera].length;
         bool cabEncontrado = false;
@@ -122,7 +123,7 @@ contract casaApuestas{
     caballoRepetido(_codigo){
         caballos[_codigo] = Caballo(_codigo, _nombre);
     }
-
+    //registrar un caballo en una carrera
     function registrarEnCarrera(uint _codCaballo, uint _codCarrera) public 
     isAnfitrion
     estadoAct(_codCarrera, Estado.Creada)
@@ -164,7 +165,7 @@ contract casaApuestas{
         return (carreras[_codCarrera].apuestas[msg.sender].monto, carreras[_codCarrera].apuestas[msg.sender].codCaballo);
     }
 
-    function getCaballosEnCarrera(uint _codCarrera) public view returns(uint, uint) {
-        return (carreras[_codCarrera].apuestas[msg.sender].monto, carreras[_codCarrera].apuestas[msg.sender].codCaballo);
-    }
+    // function getCaballosEnCarrera(uint _codCarrera) public view returns(uint []) {
+    //     //Retornar el array con los códigos de los caballos que pertenecen a la carrera 
+    // }
 }
