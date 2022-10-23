@@ -16,6 +16,7 @@ contract casaApuestas{
         Estado estadoCarrera;
         uint montoTotal; //monto total de las apuestas realizadas en la carrera
         uint numeroCaballos;
+        uint caballoGanador;
         mapping(address => Apuesta) apuestas; //usuarios con sus respectivas apuestas realizadas en la carrera
     }
 
@@ -29,6 +30,7 @@ contract casaApuestas{
         uint codCaballo;
         bool creada;
         uint proporcion;
+        uint dineroTransferido;
     }
 
     constructor() public {
@@ -119,7 +121,7 @@ contract casaApuestas{
         // c.apuestas = apuestas;
         // carreras[_codigo] = c;
         //= new Caballo[](6);
-        carreras[_codigo] = Carrera(_codigo, _nombre, Estado.Creada, 0, 0);
+        carreras[_codigo] = Carrera(_codigo, _nombre, Estado.Creada, 0, 0, 0);
         totalCarreras += 1;
     }
 
@@ -162,7 +164,7 @@ contract casaApuestas{
             carreras[_codCarrera].montoTotal += montoApuesta;
         } else{
             //Si el usuario no tiene apuestas previas se le crea una por primera vez
-            carreras[_codCarrera].apuestas[apostador] = Apuesta(montoApuesta, _codCaballo, true, 0);
+            carreras[_codCarrera].apuestas[apostador] = Apuesta(montoApuesta, _codCaballo, true, 0, 0);
             carreras[_codCarrera].montoTotal += montoApuesta;
             apostadores[_codCarrera].push(apostador); // Apostadores por cada carrera
         }
@@ -181,6 +183,7 @@ contract casaApuestas{
     estadoAct(_codCarrera, Estado.Registrada){
         uint indiceCaballoGanador = generarAleatorio(carreras[_codCarrera].numeroCaballos);  // Se obtiene le indice del caballo ganador (0,N-1)
         uint apostadoPorGanadores = 0; // El monto que apostaron unicamente los que ganaron (caballo ganador)
+        carreras[_codCarrera].caballoGanador = competencias[_codCarrera][indiceCaballoGanador];
 
         // For para calcular el total apostado por los ganadores
         for (uint i = 0; i < apostadores[_codCarrera].length; i++) {  // Total de apostadores para esta carrera
@@ -198,19 +201,88 @@ contract casaApuestas{
                 if (carreras[_codCarrera].apuestas[direccion].codCaballo == competencias[_codCarrera][indiceCaballoGanador]){
                     carreras[_codCarrera].apuestas[direccion].proporcion = (carreras[_codCarrera].apuestas[direccion].monto / apostadoPorGanadores); // Se le asigna la proporcion al apostador
                     payable(direccion).transfer(((carreras[_codCarrera].apuestas[direccion].monto * 10000) / apostadoPorGanadores) * (carreras[_codCarrera].montoTotal - (carreras[_codCarrera].montoTotal / 4)) /10000);
+                    carreras[_codCarrera].apuestas[direccion].dineroTransferido = ((carreras[_codCarrera].apuestas[direccion].monto * 10000) / apostadoPorGanadores) * (carreras[_codCarrera].montoTotal - (carreras[_codCarrera].montoTotal / 4)) /10000;
                 }
             } 
             msg.sender.transfer(carreras[_codCarrera].montoTotal / 4);
         }else{
             msg.sender.transfer(carreras[_codCarrera].montoTotal);
         }
+        carreras[_codCarrera].estadoCarrera = Estado.Terminada;
     }
 
-    //function getApuestas(uint _codCarrera) public view returns(uint, uint) {
-    //    return (carreras[_codCarrera].apuestas[msg.sender].monto, carreras[_codCarrera].apuestas[msg.sender].codCaballo);
-    //}
+    function getCaballosEnCarrera(uint _codCarrera) public view returns(string memory) {
+        string memory respuesta = "Caballos en la carrera #";
+        bool contiene = false;
+        respuesta = string(abi.encodePacked(respuesta, uint2str(_codCarrera)));
+        respuesta = string(abi.encodePacked(respuesta, ": "));
+        for (uint i = 0; i < competencias[_codCarrera].length; i++){
+            contiene = true;
+            respuesta = string(abi.encodePacked(respuesta,uint2str(competencias[_codCarrera][i])));
+            if (i != competencias[_codCarrera].length-1){
+                respuesta = string(abi.encodePacked(respuesta," - "));
+            }else{
+                break;
+            }
+        }
+        if (contiene == false){
+            respuesta = string(abi.encodePacked(respuesta,"No tiene caballos"));
+        }
+        return (respuesta);
+    }
 
-    // function getCaballosEnCarrera(uint _codCarrera) public view returns(uint []) {
-    //     //Retornar el array con los códigos de los caballos que pertenecen a la carrera 
-    // }
+    function getApostadorGanador(uint _codCarrera) public view returns(string memory) {
+        string memory respuesta = "Ganadores en la carrera #";
+        bool contiene = false;
+        respuesta = string(abi.encodePacked(respuesta, uint2str(_codCarrera)));
+        respuesta = string(abi.encodePacked(respuesta, ": "));
+        for (uint i = 0; i < apostadores[_codCarrera].length; i ++){
+            uint dinero = carreras[_codCarrera].apuestas[apostadores[_codCarrera][i]].dineroTransferido;
+            if (dinero != 0){
+                contiene = true;
+                respuesta = string(abi.encodePacked(respuesta, "Apostador #"));
+                respuesta = string(abi.encodePacked(respuesta, uint2str(i)));
+                respuesta = string(abi.encodePacked(respuesta, "-"));
+                respuesta = string(abi.encodePacked(respuesta, "Gano: "));
+                respuesta = string(abi.encodePacked(respuesta, uint2str(dinero)));
+                respuesta = string(abi.encodePacked(respuesta, "  "));
+                
+            }   
+        }     
+        return (respuesta);
+    }
+
+    function getCaballoGanador(uint _codCarrera) public view returns(uint) {
+        return (carreras[_codCarrera].caballoGanador);
+    }
+
+    function getEstadoCarrera(uint _codCarrera) public view returns(string memory){ 
+        if (carreras[_codCarrera].estadoCarrera == Estado.Creada){
+            return ("Creada");
+        }else if (carreras[_codCarrera].estadoCarrera == Estado.Registrada){
+            return ("Registrada");
+        }else{
+            return ("Terminada");
+        }
+    }
+
+    function uint2str(uint _i) internal pure returns (string memory _uintAsString) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint j = _i;
+        uint len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint k = len - 1;
+        while (_i != 0) {
+            bstr[k--] = byte(uint8(48 + _i % 10));
+            _i /= 10;
+        }
+        return string(bstr);
+    }
+
 }
