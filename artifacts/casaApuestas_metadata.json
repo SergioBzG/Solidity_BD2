@@ -11,8 +11,45 @@
 				"type": "constructor"
 			},
 			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "valor",
+						"type": "uint256"
+					}
+				],
+				"name": "Printazo",
+				"type": "event"
+			},
+			{
 				"inputs": [],
 				"name": "anfitrion",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "apostadores",
 				"outputs": [
 					{
 						"internalType": "address",
@@ -94,6 +131,16 @@
 						"internalType": "uint256",
 						"name": "montoTotal",
 						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "numeroCaballos",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "caballoGanador",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -145,21 +192,97 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
+						"name": "_indiceApostador",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
 						"name": "_codCarrera",
 						"type": "uint256"
 					}
 				],
-				"name": "getApuestas",
+				"name": "getAddressApostador",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_codCarrera",
+						"type": "uint256"
+					}
+				],
+				"name": "getApostadorGanador",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_codCarrera",
+						"type": "uint256"
+					}
+				],
+				"name": "getCaballoGanador",
 				"outputs": [
 					{
 						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
-					},
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "",
+						"name": "_codCarrera",
 						"type": "uint256"
+					}
+				],
+				"name": "getCaballosEnCarrera",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_codCarrera",
+						"type": "uint256"
+					}
+				],
+				"name": "getEstadoCarrera",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
 					}
 				],
 				"stateMutability": "view",
@@ -215,6 +338,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_codCarrera",
+						"type": "uint256"
+					}
+				],
+				"name": "terminarCarrera",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "totalCarreras",
 				"outputs": [
@@ -237,7 +373,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"casaApuestas.sol": "casaApuestas"
+			"Solidity_BD2/casaApuestas.sol": "casaApuestas"
 		},
 		"evmVersion": "istanbul",
 		"libraries": {},
@@ -251,11 +387,11 @@
 		"remappings": []
 	},
 	"sources": {
-		"casaApuestas.sol": {
-			"keccak256": "0x05cec818d263040ab5fb7696ebb950dca834858af264f5b89678a1cdfdccb32a",
+		"Solidity_BD2/casaApuestas.sol": {
+			"keccak256": "0x407ad30baf28451e74d9576945ade18b525352539fe1d4b858f4f456fe9e7848",
 			"urls": [
-				"bzz-raw://c3cd43522cf85f8f13c106ca237cee9bd97f2505e99b5835bac7ffa8b5d07ab1",
-				"dweb:/ipfs/QmeA4ixUtvzTkzfaQaxK7CJhw6N6aQ7SGZ65HuAFo6a39h"
+				"bzz-raw://7637d7c6892f15c3801a8b147f12fffbb8ba069ffe420983c47e82e6f4b10b91",
+				"dweb:/ipfs/QmQ1LDJaYerqnGvBdxkwMbb4yPtiaWrbyWqryR4Ysi85gg"
 			]
 		}
 	},

@@ -109,18 +109,19 @@ contract casaApuestas{
         _;
     }
 
+    modifier apuestaPositiva(uint _monto){
+        require(_monto > 0, "El monto de la apuesta debe ser mayor a 0");
+        _;
+    }
+
+    modifier cantApostadores(uint _codCarrera){
+        require(apostadores[_codCarrera].length > 0, "La carrera ingresada no tiene apostadores");
+        _;
+    }
+
     function crearCarrera(uint _codigo, string memory _nombre) public 
     isAnfitrion
     carreraRepetida(_codigo){
-        // mapping(address => Apuesta) storage apuestas;
-        // apuestas[msg.sender] = Apuesta(3,3,true);
-        // Carrera storage c;
-        // c.codigo = _codigo;
-        // c.nombre = _nombre;
-        // c.estadoCarrera = Estado.Creada;
-        // c.apuestas = apuestas;
-        // carreras[_codigo] = c;
-        //= new Caballo[](6);
         carreras[_codigo] = Carrera(_codigo, _nombre, Estado.Creada, 0, 0, 0);
         totalCarreras += 1;
     }
@@ -153,7 +154,10 @@ contract casaApuestas{
     function apostar(uint _codCaballo, uint _codCarrera) payable public 
     isNotAnfitrion
     estadoAct(_codCarrera, Estado.Registrada)
-    caballoEnCarrera(_codCarrera, _codCaballo){
+    caballoExiste(_codCaballo)
+    carreraExiste(_codCarrera)
+    caballoEnCarrera(_codCarrera, _codCaballo)
+    apuestaPositiva(msg.value){
         uint montoApuesta = msg.value;
         address apostador = msg.sender;
         //Se comprueba si el ususario tiene apuestas 
@@ -211,7 +215,10 @@ contract casaApuestas{
         carreras[_codCarrera].estadoCarrera = Estado.Terminada;
     }
 
-    function getCaballosEnCarrera(uint _codCarrera) public view returns(string memory) {
+    function getCaballosEnCarrera(uint _codCarrera) public 
+    carreraExiste(_codCarrera)
+    estadoAct(_codCarrera, Estado.Registrada)
+    view returns(string memory){ 
         string memory respuesta = "Caballos en la carrera #";
         bool contiene = false;
         respuesta = string(abi.encodePacked(respuesta, uint2str(_codCarrera)));
@@ -225,13 +232,17 @@ contract casaApuestas{
                 break;
             }
         }
-        if (contiene == false){
-            respuesta = string(abi.encodePacked(respuesta,"No tiene caballos"));
+        if (!contiene){
+            respuesta = string(abi.encodePacked(respuesta,"La carrera ingresada no tiene caballos"));
         }
         return (respuesta);
     }
 
-    function getApostadorGanador(uint _codCarrera) public view returns(string memory) {
+    function getApostadorGanador(uint _codCarrera) public 
+    carreraExiste(_codCarrera)
+    estadoAct(_codCarrera, Estado.Terminada)
+    cantApostadores(_codCarrera)
+    view returns(string memory){
         string memory respuesta = "Ganadores en la carrera #";
         bool contiene = false;
         respuesta = string(abi.encodePacked(respuesta, uint2str(_codCarrera)));
@@ -252,11 +263,24 @@ contract casaApuestas{
         return (respuesta);
     }
 
-    function getCaballoGanador(uint _codCarrera) public view returns(uint) {
+    //función para consultar la direccón de un apostador según su índice
+    function getAddressApostador(uint _indiceApostador, uint _codCarrera) public 
+    carreraExiste(_codCarrera)
+    cantApostadores(_codCarrera)
+    view returns(address){
+        return apostadores[_codCarrera][_indiceApostador];
+    }
+
+    function getCaballoGanador(uint _codCarrera) public 
+    carreraExiste(_codCarrera)
+    estadoAct(_codCarrera, Estado.Terminada)
+    view returns(uint) {
         return (carreras[_codCarrera].caballoGanador);
     }
 
-    function getEstadoCarrera(uint _codCarrera) public view returns(string memory){ 
+    function getEstadoCarrera(uint _codCarrera) public 
+    carreraExiste(_codCarrera)
+    view returns(string memory){ 
         if (carreras[_codCarrera].estadoCarrera == Estado.Creada){
             return ("Creada");
         }else if (carreras[_codCarrera].estadoCarrera == Estado.Registrada){
