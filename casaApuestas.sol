@@ -4,11 +4,17 @@ contract casaApuestas{
     address public anfitrion;
     enum Estado {Creada, Registrada, Terminada}
     uint public totalCarreras;
-    event Printazo(uint valor);
     mapping(uint => Carrera) public carreras; //carreras existentes
     mapping(uint => Caballo) public caballos; //caballos existentes
     mapping(uint => uint[]) public competencias; //caballos registrados en una carrera determinada
     mapping(uint => address[]) public apostadores; //apostadores registrados en una carrera determinada
+
+    event CarreraInsertada(uint codigo, string nombre, Estado estadoCarrera);
+    event CarreraRegistrada(uint codigo, string nombre, Estado estadoCarrera);
+    event CarreraTerminada(uint codigo, string nombre, Estado estadoCarrera);
+    event CaballoInsertado(uint codigo, string nombre);
+    event CaballoGanador(uint codCarrera, uint codCaballo);
+    event ApuestaRealizada(uint codCarrera, uint codCaballo, address apostador, uint monto);
 
     struct Carrera{
         uint codigo;
@@ -62,22 +68,22 @@ contract casaApuestas{
         require(competencias[_codCarrera].length >= 2, "La carrera debe contar con al menos 2 caballos");
         _;
     }
-
+    //se verifica que el caballo exista
     modifier caballoExiste(uint _codCaballo){
         require(bytes(caballos[_codCaballo].nombre).length != 0, "El caballo ingresado no existe");
         _;
     }
-
+    //se verifica que la carrera exista
     modifier carreraExiste(uint _codCarrera){
         require(bytes(carreras[_codCarrera].nombre).length != 0, "La carrera ingresada no existe");
         _;
     }
-
+    //se verifica que no se ingrese un caballo repetido
     modifier caballoRepetido(uint _codCaballo){
         require(bytes(caballos[_codCaballo].nombre).length == 0, "Ya existe un caballo con este código");
         _;
     }
-
+    //se verifica que no se ingrese una carrera repetida
     modifier carreraRepetida(uint _codCarrera){
         require(bytes(carreras[_codCarrera].nombre).length == 0, "Ya existe una carrera con este código");
         _;
@@ -95,7 +101,7 @@ contract casaApuestas{
         require(!caballoRep, "Este caballo ya se encuentra registrado en esta carrera");
         _;
     }
-    //se verifica que un caballo esté registrado en una carrera determinada
+    //se verifica que un caballo dado esté registrado en una carrera determinada
     modifier caballoEnCarrera(uint _codCarrera, uint _codCaballo){
         uint cantCaballos = competencias[_codCarrera].length;
         bool cabEncontrado = false;
@@ -108,28 +114,30 @@ contract casaApuestas{
         require(cabEncontrado, "Este caballo no se encuentra registrado en esta carrera");
         _;
     }
-
+    //se verifica que la apuesta realizada sea mayor que cero
     modifier apuestaPositiva(uint _monto){
         require(_monto > 0, "El monto de la apuesta debe ser mayor a 0");
         _;
     }
-
+    //se verifica que en determinada carrera haya apostadores
     modifier cantApostadores(uint _codCarrera){
         require(apostadores[_codCarrera].length > 0, "La carrera ingresada no tiene apostadores");
         _;
     }
-
+    //crear una carrera
     function crearCarrera(uint _codigo, string memory _nombre) public 
     isAnfitrion
     carreraRepetida(_codigo){
         carreras[_codigo] = Carrera(_codigo, _nombre, Estado.Creada, 0, 0, 0);
         totalCarreras += 1;
+        emit CarreraInsertada(carreras[_codigo].codigo, carreras[_codigo].nombre, carreras[_codigo].estadoCarrera);
     }
-
+    //registrar un caballo 
     function registrarCaballo(uint _codigo, string memory _nombre) public 
     isAnfitrion
     caballoRepetido(_codigo){
         caballos[_codigo] = Caballo(_codigo, _nombre);
+        emit CaballoInsertado(caballos[_codigo].codigo, caballos[_codigo].nombre);
     }
     //registrar un caballo en una carrera
     function registrarEnCarrera(uint _codCaballo, uint _codCarrera) public 
@@ -142,15 +150,16 @@ contract casaApuestas{
         competencias[_codCarrera].push(_codCaballo);
         carreras[_codCarrera].numeroCaballos += 1;
     }
-
+    //Registrar carrera
     function registrarCarrera(uint _codCarrera) public 
     isAnfitrion
     estadoAct(_codCarrera, Estado.Creada)
     carreraExiste(_codCarrera)
     tamanoMin(_codCarrera){
         carreras[_codCarrera].estadoCarrera = Estado.Registrada;
+        emit CarreraRegistrada(carreras[_codCarrera].codigo, carreras[_codCarrera].nombre, carreras[_codCarrera].estadoCarrera);
     }
-
+    //realizar apuesta por un caballo en una determinada carrera
     function apostar(uint _codCaballo, uint _codCarrera) payable public 
     isNotAnfitrion
     estadoAct(_codCarrera, Estado.Registrada)
@@ -172,15 +181,16 @@ contract casaApuestas{
             carreras[_codCarrera].montoTotal += montoApuesta;
             apostadores[_codCarrera].push(apostador); // Apostadores por cada carrera
         }
+        emit ApuestaRealizada(_codCarrera, _codCaballo, apostador, montoApuesta);
     }
-
+    //generar número aleatorio para elegir el caballo ganador
     function generarAleatorio(uint modulo) internal returns(uint){
         uint randNonce = 0;
         randNonce ++; 
         uint numero = uint(keccak256(abi.encodePacked(now, msg.sender, randNonce))) % modulo;
         return (numero);
     }
-
+    //dar por terminada una carrera
     function terminarCarrera(uint _codCarrera) payable public
     isAnfitrion
     carreraExiste(_codCarrera)
@@ -188,7 +198,7 @@ contract casaApuestas{
         uint indiceCaballoGanador = generarAleatorio(carreras[_codCarrera].numeroCaballos);  // Se obtiene le indice del caballo ganador (0,N-1)
         uint apostadoPorGanadores = 0; // El monto que apostaron unicamente los que ganaron (caballo ganador)
         carreras[_codCarrera].caballoGanador = competencias[_codCarrera][indiceCaballoGanador];
-
+        emit CaballoGanador(_codCarrera, carreras[_codCarrera].caballoGanador);
         // For para calcular el total apostado por los ganadores
         for (uint i = 0; i < apostadores[_codCarrera].length; i++) {  // Total de apostadores para esta carrera
             address direccion = apostadores[_codCarrera][i]; // Dirección de los apostadores vinculados a una carrera y se obtiene la direccion con el indice
@@ -213,11 +223,11 @@ contract casaApuestas{
             msg.sender.transfer(carreras[_codCarrera].montoTotal);
         }
         carreras[_codCarrera].estadoCarrera = Estado.Terminada;
+        emit CarreraTerminada(carreras[_codCarrera].codigo, carreras[_codCarrera].nombre, carreras[_codCarrera].estadoCarrera);
     }
-
+    //Obtener los caballos que están inscritos en una carrera
     function getCaballosEnCarrera(uint _codCarrera) public 
     carreraExiste(_codCarrera)
-    estadoAct(_codCarrera, Estado.Registrada)
     view returns(string memory){ 
         string memory respuesta = "Caballos en la carrera #";
         bool contiene = false;
@@ -237,7 +247,7 @@ contract casaApuestas{
         }
         return (respuesta);
     }
-
+    //obtener el o los apostadores ganadores en una carrera junto con los montos ganados por cada uno
     function getApostadorGanador(uint _codCarrera) public 
     carreraExiste(_codCarrera)
     estadoAct(_codCarrera, Estado.Terminada)
@@ -263,21 +273,21 @@ contract casaApuestas{
         return (respuesta);
     }
 
-    //función para consultar la direccón de un apostador según su índice
+    //función para consultar la direccón de un apostador según su índice en la lista del mapping apostadores
     function getAddressApostador(uint _indiceApostador, uint _codCarrera) public 
     carreraExiste(_codCarrera)
     cantApostadores(_codCarrera)
     view returns(address){
         return apostadores[_codCarrera][_indiceApostador];
     }
-
+    //obtener el caballo ganador de una carrera
     function getCaballoGanador(uint _codCarrera) public 
     carreraExiste(_codCarrera)
     estadoAct(_codCarrera, Estado.Terminada)
     view returns(uint) {
         return (carreras[_codCarrera].caballoGanador);
     }
-
+    //obtner el estado actual de una carrera
     function getEstadoCarrera(uint _codCarrera) public 
     carreraExiste(_codCarrera)
     view returns(string memory){ 
@@ -289,7 +299,7 @@ contract casaApuestas{
             return ("Terminada");
         }
     }
-
+    //función utilizada para realizar concatenación de strings
     function uint2str(uint _i) internal pure returns (string memory _uintAsString) {
         if (_i == 0) {
             return "0";
@@ -308,5 +318,4 @@ contract casaApuestas{
         }
         return string(bstr);
     }
-
 }
